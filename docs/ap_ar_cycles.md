@@ -1,11 +1,11 @@
-Cycle Accounts Payables (AP)
+# Mini-session métier : cycles AP/AR et historisation
 
-Réception de factures fournisseur → validation → mise en attente → paiement → clôture.
+## Cycle Accounts Payables (AP)
+- Réception et validation des factures fournisseurs
+- Suivi des dates (réception, échéance, paiement)
+- Importance de conserver l’historique des statuts (SCD Type 2)
 
-Importance de suivre les dates de réception, d’échéance et de paiement (historisation).
-
-Cycle Accounts Receivables (AR)
-
-Émission de factures clients → suivi d’encaissement → lettrage → relance.
-
-Historisation des statuts (échu, en recouvrement…).
+## Cycle Accounts Receivables (AR)
+- Émission et suivi des factures clients
+- Gestion des encaissements et relances
+- Historisation des statuts (lettrage, recouvrement)
