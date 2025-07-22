@@ -1,0 +1,2 @@
+- Virtualenv : isolation avec `python3 -m venv .venv`
+- Activation : `source .venv/bin/activate` (ou équivalent windows)
