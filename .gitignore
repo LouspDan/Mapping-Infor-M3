@@ -1,1 +1,14 @@
 *.bak
+# Environnement Python
+.venv/
+_pycach_/
+# Jupyter
+.ipynb_checkpoints/
+# Fichier de configuration utilisateur
+*.env
+*.ini
+# Logs et fichier temporaires
+*.log
+*.tmp
+# MacOS
+.DS_Store
