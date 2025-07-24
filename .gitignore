@@ -12,3 +12,7 @@ _pycach_/
 *.tmp
 # MacOS
 .DS_Store
+nohup.out
+__pycache__/
+# Docker files (si générés automatiquement)
+docker-compose.override.yml
