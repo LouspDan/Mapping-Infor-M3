@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MLD - Accounts Payables DataWarehouse</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .title {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 16px;
+            margin-bottom: 40px;
+            font-style: italic;
+        }
+        
+        .schema-container {
+            position: relative;
+            width: 100%;
+            height: 1000px;
+            border: 2px solid #34495e;
+            border-radius: 10px;
+            background: linear-gradient(45deg, #f8f9fa 25%, transparent 25%), 
+                        linear-gradient(-45deg, #f8f9fa 25%, transparent 25%), 
+                        linear-gradient(45deg, transparent 75%, #f8f9fa 75%), 
+                        linear-gradient(-45deg, transparent 75%, #f8f9fa 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            overflow: hidden;
+        }
+        
+        .table {
+            position: absolute;
+            border: 2px solid #2c3e50;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-size: 11px;
+            transition: all 0.3s ease;
+        }
+        
+        .table:hover {
+            transform: scale(1.02);
+            z-index: 10;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        .table-header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 8px 12px;
+            font-weight: bold;
+            text-align: center;
+            border-radius: 6px 6px 0 0;
+            font-size: 12px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        .table-header.fact {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .table-body {
+            padding: 0;
+        }
+        
+        .field {
+            padding: 4px 8px;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .field:last-child {
+            border-bottom: none;
+        }
+        
+        .field:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .field-name {
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .field-type {
+            color: #7f8c8d;
+            font-size: 10px;
+            font-style: italic;
+        }
+        
+        .pk {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .fk {
+            background-color: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .pk .field-name::after {
+            content: " 🔑";
+            color: #ffc107;
+        }
+        
+        .fk .field-name::after {
+            content: " 🔗";
+            color: #17a2b8;
+        }
+        
+        .relationship {
+            position: absolute;
+            pointer-events: none;
+        }
+        
+        .relationship-line {
+            stroke: #3498db;
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 5,5;
+            animation: dash 20s linear infinite;
+        }
+        
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -200;
+            }
+        }
+        
+        .relationship-circle {
+            fill: #3498db;
+            r: 3;
+        }
+        
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.95);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #bdc3c7;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 15px;
+            border-radius: 3px;
+            margin-right: 8px;
+        }
+        
+        .watermark {
+            position: absolute;
+            bottom: 10px;
+            left: 20px;
+            color: #bdc3c7;
+            font-size: 10px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">📊 Modèle Logique de Données (MLD)</h1>
+        <p class="subtitle">Accounts Payables DataWarehouse - Architecture Dimensionnelle</p>
+        
+        <div class="schema-container">
+            <!-- Table centrale FACT -->
+            <div class="table" style="top: 320px; left: 520px; width: 280px; z-index: 5;">
+                <div class="table-header fact">FACT_ACCOUNTS_PAYABLES</div>
+                <div class="table-body">
+                    <div class="field pk">
+                        <span class="field-name">transaction_sk</span>
+                        <span class="field-type">BIGINT</span>
+                    </div>
+                    <div class="field fk">
+                        <span class="field-name">date_sk</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field fk">
+                        <span class="field-name">invoice_date_sk</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field fk">
+                        <span class="field-name">due_date_sk</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field fk">
+                        <span class="field-name">supplier_sk</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field fk">
+                        <span class="field-name">company_sk</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field fk">
+                        <span class="field-name">division_sk</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field fk">
+                        <span class="field-name">currency_sk</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field fk">
+                        <span class="field-name">payment_terms_sk</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field fk">
+                        <span class="field-name">gl_account_sk</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field fk">
+                        <span class="field-name">product_sk</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">invoice_number</span>
+                        <span class="field-type">VARCHAR(50)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">invoice_amount_local</span>
+                        <span class="field-type">DECIMAL(15,2)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">invoice_amount_reporting</span>
+                        <span class="field-type">DECIMAL(15,2)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">paid_amount_local</span>
+                        <span class="field-type">DECIMAL(15,2)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">invoice_status</span>
+                        <span class="field-type">VARCHAR(20)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">is_disputed</span>
+                        <span class="field-type">BOOLEAN</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DIM_DATE -->
+            <div class="table" style="top: 50px; left: 580px; width: 160px;">
+                <div class="table-header">DIM_DATE</div>
+                <div class="table-body">
+                    <div class="field pk">
+                        <span class="field-name">date_sk</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">date_id</span>
+                        <span class="field-type">DATE</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">day_of_month</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">month_number</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">quarter_number</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">year_number</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">fiscal_period</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DIM_SUPPLIER -->
+            <div class="table" style="top: 280px; left: 50px; width: 180px;">
+                <div class="table-header">DIM_SUPPLIER</div>
+                <div class="table-body">
+                    <div class="field pk">
+                        <span class="field-name">supplier_sk</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">supplier_id</span>
+                        <span class="field-type">VARCHAR(20)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">supplier_name</span>
+                        <span class="field-type">VARCHAR(200)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">country_code</span>
+                        <span class="field-type">VARCHAR(3)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">supplier_category</span>
+                        <span class="field-type">VARCHAR(50)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">risk_rating</span>
+                        <span class="field-type">VARCHAR(10)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">is_current</span>
+                        <span class="field-type">BOOLEAN</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DIM_COMPANY -->
+            <div class="table" style="top: 750px; left: 300px; width: 180px;">
+                <div class="table-header">DIM_COMPANY</div>
+                <div class="table-body">
+                    <div class="field pk">
+                        <span class="field-name">company_sk</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">company_code</span>
+                        <span class="field-type">VARCHAR(10)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">company_name</span>
+                        <span class="field-type">VARCHAR(200)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">country_code</span>
+                        <span class="field-type">VARCHAR(3)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">reporting_currency</span>
+                        <span class="field-type">VARCHAR(3)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">is_current</span>
+                        <span class="field-type">BOOLEAN</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DIM_DIVISION -->
+            <div class="table" style="top: 750px; left: 900px; width: 160px;">
+                <div class="table-header">DIM_DIVISION</div>
+                <div class="table-body">
+                    <div class="field pk">
+                        <span class="field-name">division_sk</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">division_code</span>
+                        <span class="field-type">VARCHAR(10)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">division_name</span>
+                        <span class="field-type">VARCHAR(100)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">business_unit</span>
+                        <span class="field-type">VARCHAR(50)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">region</span>
+                        <span class="field-type">VARCHAR(50)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">is_current</span>
+                        <span class="field-type">BOOLEAN</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DIM_CURRENCY -->
+            <div class="table" style="top: 280px; left: 1000px; width: 160px;">
+                <div class="table-header">DIM_CURRENCY</div>
+                <div class="table-body">
+                    <div class="field pk">
+                        <span class="field-name">currency_sk</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">currency_code</span>
+                        <span class="field-type">VARCHAR(3)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">currency_name</span>
+                        <span class="field-type">VARCHAR(50)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">currency_symbol</span>
+                        <span class="field-type">VARCHAR(5)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">is_current</span>
+                        <span class="field-type">BOOLEAN</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DIM_PAYMENT_TERMS -->
+            <div class="table" style="top: 50px; left: 900px; width: 180px;">
+                <div class="table-header">DIM_PAYMENT_TERMS</div>
+                <div class="table-body">
+                    <div class="field pk">
+                        <span class="field-name">payment_terms_sk</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">payment_terms_code</span>
+                        <span class="field-type">VARCHAR(10)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">payment_terms_desc</span>
+                        <span class="field-type">VARCHAR(100)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">net_days</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">discount_percent_1</span>
+                        <span class="field-type">DECIMAL(5,2)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">is_current</span>
+                        <span class="field-type">BOOLEAN</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DIM_GL_ACCOUNT -->
+            <div class="table" style="top: 520px; left: 1000px; width: 200px;">
+                <div class="table-header">DIM_GL_ACCOUNT</div>
+                <div class="table-body">
+                    <div class="field pk">
+                        <span class="field-name">gl_account_sk</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">gl_account_code</span>
+                        <span class="field-type">VARCHAR(20)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">gl_account_name</span>
+                        <span class="field-type">VARCHAR(200)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">account_type</span>
+                        <span class="field-type">VARCHAR(50)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">account_category</span>
+                        <span class="field-type">VARCHAR(50)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">is_current</span>
+                        <span class="field-type">BOOLEAN</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DIM_PRODUCT -->
+            <div class="table" style="top: 520px; left: 50px; width: 160px;">
+                <div class="table-header">DIM_PRODUCT</div>
+                <div class="table-body">
+                    <div class="field pk">
+                        <span class="field-name">product_sk</span>
+                        <span class="field-type">INT</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">product_code</span>
+                        <span class="field-type">VARCHAR(50)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">product_name</span>
+                        <span class="field-type">VARCHAR(200)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">product_category</span>
+                        <span class="field-type">VARCHAR(100)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">brand</span>
+                        <span class="field-type">VARCHAR(100)</span>
+                    </div>
+                    <div class="field">
+                        <span class="field-name">is_current</span>
+                        <span class="field-type">BOOLEAN</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Relations SVG -->
+            <svg class="relationship" style="width: 100%; height: 100%;">
+                <!-- Date -> Fact -->
+                <line class="relationship-line" x1="660" y1="220" x2="640" y2="320"></line>
+                <circle class="relationship-circle" cx="660" cy="220"></circle>
+                <circle class="relationship-circle" cx="640" cy="320"></circle>
+                
+                <!-- Supplier -> Fact -->
+                <line class="relationship-line" x1="230" y1="360" x2="520" y2="380"></line>
+                <circle class="relationship-circle" cx="230" cy="360"></circle>
+                <circle class="relationship-circle" cx="520" cy="380"></circle>
+                
+                <!-- Company -> Fact -->
+                <line class="relationship-line" x1="390" y1="750" x2="580" y2="550"></line>
+                <circle class="relationship-circle" cx="390" cy="750"></circle>
+                <circle class="relationship-circle" cx="580" cy="550"></circle>
+                
+                <!-- Division -> Fact -->
+                <line class="relationship-line" x1="980" y1="750" x2="750" y2="550"></line>
+                <circle class="relationship-circle" cx="980" cy="750"></circle>
+                <circle class="relationship-circle" cx="750" cy="550"></circle>
+                
+                <!-- Currency -> Fact -->
+                <line class="relationship-line" x1="1000" y1="360" x2="800" y2="420"></line>
+                <circle class="relationship-circle" cx="1000" cy="360"></circle>
+                <circle class="relationship-circle" cx="800" cy="420"></circle>
+                
+                <!-- Payment Terms -> Fact -->
+                <line class="relationship-line" x1="990" y1="220" x2="750" y2="320"></line>
+                <circle class="relationship-circle" cx="990" cy="220"></circle>
+                <circle class="relationship-circle" cx="750" cy="320"></circle>
+                
+                <!-- GL Account -> Fact -->
+                <line class="relationship-line" x1="1000" y1="520" x2="800" y2="480"></line>
+                <circle class="relationship-circle" cx="1000" cy="520"></circle>
+                <circle class="relationship-circle" cx="800" cy="480"></circle>
+                
+                <!-- Product -> Fact -->
+                <line class="relationship-line" x1="210" y1="580" x2="520" y2="500"></line>
+                <circle class="relationship-circle" cx="210" cy="580"></circle>
+                <circle class="relationship-circle" cx="520" cy="500"></circle>
+            </svg>
+
+            <!-- Légende -->
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #e74c3c, #c0392b);"></div>
+                    <span>Table de Faits</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #3498db, #2980b9);"></div>
+                    <span>Tables de Dimensions</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #fff3cd; border: 1px solid #ffc107;"></div>
+                    <span>🔑 Clé Primaire (PK)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #d1ecf1; border: 1px solid #17a2b8;"></div>
+                    <span>🔗 Clé Étrangère (FK)</span>
+                </div>
+                <div class="legend-item">
+                    <span style="color: #3498db;">- - - Relations 1:N</span>
+                </div>
+            </div>
+
+            <div class="watermark">
+                MLD DataWarehouse - Projet Portfolio M3
+            </div>
+        </div>
+    </div>
+</body>
+</html>
