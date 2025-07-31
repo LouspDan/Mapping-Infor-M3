@@ -1,19 +1,29 @@
-# 🧾 Mapping Account Payables - Projet Portfolio Data Engineering
+
+# 📘 Projet Portfolio – Mapping ERP Infor M3 vers Datahub Finance/Achats
 
 **Projet de démonstration** : Pipeline de données Finance/Achats pour l'intégration des données Account Payables d'un système ERP Infor M3 vers un Datahub d'entreprise.
 
-> 📚 **Contexte** : Projet personnel développé pour démontrer mes compétences en Data Engineering et Analytics Engineering dans le cadre de ma recherche d'opportunités professionnelles.
+> 🎯 **Objectif** : Valoriser mes compétences en Data Engineering et Analytics Engineering dans un contexte professionnel.
 
-## 🎯 Objectifs d'apprentissage
+## 🏢 Contexte métier simulé
+
+Ce projet reproduit un **scénario réaliste** : une entreprise utilise l’ERP **Infor M3** pour gérer ses achats et finances. Elle souhaite consolider ses données dans un **Datahub** pour :
+- Fiabiliser le suivi de ses comptes fournisseurs
+- Analyser ses délais de paiement
+- Produire un P&L multi-entité
+
+Le rôle du data engineer est de **retrouver les bonnes données dans les tables M3**, les **stocker dans une base de staging**, puis les **valider et préparer pour analyse**.
+
+## 🎓 Objectifs pédagogiques et techniques
 
 Ce projet illustre ma maîtrise des concepts clés du Data Engineering :
+- 📥 **Pipeline ELT** : Extraction, chargement et transformation de données ERP
+- ✅ **Qualité des données** : Tests automatisés avec pytest
+- 🧱 **Modélisation dimensionnelle** : Conception d'un modèle staging vers datawarehouse
+- 🧪 **Tests unitaires** et reproductibilité
+- 📊 **Préparation analytique** : données Gold, KPIs, P&L
 
-- **Pipeline ELT** : Extraction, chargement et transformation de données ERP
-- **Qualité des données** : Mise en place de tests automatisés avec pytest
-- **Modélisation dimensionnelle** : Conception d'un modèle staging vers datawarehouse
-- **Bonnes pratiques** : Reproductibilité, documentation, tests unitaires
-
-## 🏗️ Architecture technique
+## 🗂️ Architecture technique
 
 ```
 MAPPING-INFOR-M3/
@@ -46,10 +56,10 @@ Simulation de données Account Payables avec les champs :
 # Exemples de tests implémentés
 def test_no_null_values():
     # Vérification des colonnes obligatoires
-    
+
 def test_positive_amounts():
     # Contrôle métier sur les montants
-    
+
 def test_date_consistency():
     # Logique des dates (due_date >= invoice_date)
 ```
@@ -85,6 +95,10 @@ Notebook Jupyter avec :
 - SQL Server / PostgreSQL (adaptable)
 - Jupyter Notebooks
 - Git/GitHub pour versioning
+- Visual Studio Code : développement Python, gestion de projet
+- Extension Database Client (VS Code) : exploration et requêtage SQL (SQL Server)
+- Git Bash : exécution des commandes Git et scripts
+
 ```
 
 ## 🚀 Évolutions prévues
@@ -106,7 +120,7 @@ Notebook Jupyter avec :
 
 ```bash
 # Installation et test rapide
-git clone https://github.com/[username]/mapping-infor-m3
+git clone https://github.com/LouspDan/Mapping-Infor-M3
 cd mapping-infor-m3
 pip install -r requirements.txt
 make test  # Exécution des tests qualité
@@ -125,3 +139,9 @@ Ce projet démontre ma capacité à :
 *Projet développé en autonomie - Disponible pour échanges techniques et démonstrations*
 
 **Contact** : [LinkedIn](https://linkedin.com/in/esaie-lupepele) | [Email](mailto:esaie.lupepele@gmail.com)
+
+---
+
+**🛡️ Clause de confidentialité**
+
+Ce projet a été conçu à des fins pédagogiques et de démonstration. Les données, structures et scénarios présentés sont entièrement simulés. Toute ressemblance avec des systèmes ou entreprises réels serait purement fortuite
