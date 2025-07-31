@@ -16,3 +16,6 @@ nohup.out
 __pycache__/
 # Docker files (si générés automatiquement)
 docker-compose.override.yml
+# VS code
+.vs/
+*.vsidx
