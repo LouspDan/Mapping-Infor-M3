@@ -41,17 +41,19 @@ MAPPING-INFOR-M3/
 ```
 
 ## 🔄 Pipeline implémenté
-
+![Code ELT](images/pipeline_code.jpg)
 ### 1. Extraction des données
 Simulation de données Account Payables avec les champs :
 - `invoice_id`, `supplier_id`, `amount`, `invoice_date`, `due_date`
 
 ### 2. Chargement en staging
+![Données chargées](images/database_result.jpg)
 - Table `staging.stg_account_payables` 
 - Utilisation de SQLAlchemy pour la portabilité
 - Gestion automatique de la création des tables
 
 ### 3. Contrôles qualité (pytest)
+![Tests automatisés](images/tests_results.jpg)
 ```python
 # Exemples de tests implémentés
 def test_no_null_values():
